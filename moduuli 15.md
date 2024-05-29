@@ -62,7 +62,7 @@ Tämä johtuu siitä että verkossa voi olla osoitteellisa samankaltaisuuksia, j
     ipv6 route IP-osoite Portti Ulostulo IP-osoite - ipv6 route 2001:db8:acad:1::/64 s0/1/0 fe80::2
 
 
-## Aiheeseen liittyviä yleishyviä komentoja
+### Aiheeseen liittyviä yleishyviä komentoja
 
     show ip route
     show ip route static
@@ -71,6 +71,102 @@ Tämä johtuu siitä että verkossa voi olla osoitteellisa samankaltaisuuksia, j
     show ipv6 route
 
     ping
-    tracewroute
+    traceroute
     show running-config | section ip route
 
+## Default Static Route
+
+Asetus, jossa polku vastaa kaikkia paketteja. Sillä tarkoitetaan myös kaikkia verkkoja, jotka eivät ole osana routing tablea.
+Reitittimet tulevat yleensä valmiiksi ohjelmoituna default routeilla tai ne on asetettu oppimaan niiden tietoja toiselta reitittimeltä.
+Default Static Route on siis yleensä viimeinen vaihtoehto, jos automaattinen toteutus ei toimisi tai turva-asetukset määräisivät näin.
+
+Huom! Tällöin IP-osoitteeksi ja maskiksi asetetaan kaiken välittävät tiedot: IPv4:ssä 0.0.0.0 ja 0.0.0.0 kun taas IPv6:ssa ::/0
+
+### IPv4 Default Static Route
+
+    enable
+    configure
+    ip route IP-osoite Maski Kohde - ip route 0.0.0.0 0.0.0.0 172.16.2.2
+    
+    exit
+    show ip route static
+
+### IPv6 Default Static Route
+
+    enable
+    configure
+    ipv6 route ::/0 2001:db8:acad:2::2
+    
+    exit
+    show ipv6 route static
+
+Muutoksen tarkistus tapahtuu komennolla "show ip route static" ja IPv6:lla "show ipv6 route static"
+
+## Floating Static Route
+
+Tarjoavat varayhteydet pääasiallisille staattisille verkoille. Tulevat aktiivisiksi ainoastaan kun pääyhteys ei ole aktiivisena.
+Pääyhteyksiin voi kuulua manuaalisesti muodostettu staattinen verkko tai reitittimien automaattisesti oppima rakenne.
+
+Tämä varmistetaan asettamalla varaverkolle iso AD-arvo, jolloin verkko ohjaa liikenteen alemman AD:n porteista, kunnes yhteys katkeaisi ja aiempi ei käytössä ollut polku otettaisiin sen löytymisen jälkeen käyttöön (AD: Administrative Distance).
+
+Korkean AD:n verkkoa ei käytetä, jos alemman AD:n polku löytyy.
+
+    Directly connected - 0
+    Static Route - 1
+    EIGRP summary route - 5
+    External BGP - 20
+    Internal BGP - 90
+
+
+### IPv4 Floating Static Route
+
+Floatin muodostaminen IP4lle tarkoittaisi uuden staattisen yhteyden muodostamista, 
+
+    enable
+    configure
+    ip route
+    ip route 172.168.8.8 255.255.255.0 178.168.88.88 - Oletuksellinen staattinen yhteys, AD arvona 1
+    ip route 172.168.8.8 255.255.255.0 10.10.10.2 5 - Toissijainen staattinen yhteys, AD arvona 5
+
+    exit
+    show ip route
+    traceroute
+    Kokeile katkaista pääasiallista staattista yhteyttä
+    show ip route
+    traceroute
+
+### IPv6 Floating Static Route
+
+    enable
+    configure
+    ipv6 route 2001:db8:acad:1::/64 2001:db8:acad:2::2 - Oletuksellinen staattinen yhteys, AD arvona 1
+    ipv6 route 2001:db8:acad:1::/64 2001:db8:feed:10::2 5 - Toissijainen staattinen yhteys, AD arvona 5
+    
+    exit
+    show ip route
+    traceroute
+    Kokeile katkaista pääasiallista staattista yhteyttä
+    show ip route
+    traceroute
+
+### IPv4 Floating Static Default Route
+
+Jos muodostettavalle vara polulle haluttaisiin mahdollisuus välittää kaikki paketit eteenpäin, tehtäisiin se Default Static Routen ohjeita mukaillen.
+
+    enable
+    configure
+    ip route 0.0.0.0 0.0.0.0 172.16.2.2 - Oletuksellinen staattinen yhteys, AD arvona 1
+    ip route 0.0.0.0 0.0.0.0 10.10.10.2 5 - Toissijainen staattinen yhteys, AD arvona 5
+    
+    exit
+    show ip route
+
+### IPv6 Floating Static Default Route
+
+    enable
+    configure
+    ipv6 route ::/0 2001:db8:acad:2::2 - Oletuksellinen staattinen yhteys, AD arvona 1
+    ipv6 route ::/0 2001:db8:feed:10::2 5 - Toissijainen staattinen yhteys, AD arvona 5
+    
+    exit
+    show ipv6 route
