@@ -170,3 +170,36 @@ Jos muodostettavalle vara polulle haluttaisiin mahdollisuus välittää kaikki p
     
     exit
     show ipv6 route
+
+## Static Host Routes
+
+Ciscon reitittimillä yhteys muodostuu automaattisesti IP-osoiteen muodostumisen yhteydessä.
+
+Tässä osiossa käydään läpi sen manuaalisesti toteuttaminen, syitä tälle voivat olla tehostettu reititin pakettien välittäminen sekä tietoturva.
+
+Ennen muutosta laitteilla on jo tietoja, jos verkko on ollut toiminnallinen.
+
+    enable
+    configure
+    ip route 209.165.200.238 255.255.255.255 198.51.100.2
+    ipv6 route 2001:db8:acad:2::238/128 2001:db8:acad:1::2
+    exit
+    show ip route | begin Gateway
+
+
+Next-Hopin asettaminen
+
+### IPv4 Static Host Route with Link-Local Next-Hop
+
+    enable
+    configure
+    no ip soute 209.165.200.238 255.255.255.255 198.51.100.2
+    ip route 209.165.200.238 255.255.255.255 GigabitEthernet 0/0/1 198.51.100.2
+
+### IPv6 Static Host Route with Link-Local Next-Hop
+
+    enable
+    configure
+    no ipv6 route 2001:db8:acad:2::238/128 2001:db8:acad:1::2 - tämä poistaaa jo olemassaolevan polun käytöstä, jonka jälkeen voidaan lisätä uusi.
+    ipv6 route IP-osoite Portti Ulos menevä IP-osoite - ipv6 route 2001:db8:acad:2::238/128 serial 0/1/0 fe80::2
+    
